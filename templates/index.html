@@ -1,0 +1,303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SplitMitra - Premium Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* GLOBAL PREMIUM STYLES */
+        body { 
+            background-color: #f4f7f9; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: #1e1e2f;
+        }
+        
+        /* 1. ANIMATED SIDEBAR */
+        .sidebar { background: #ffffff; box-shadow: 4px 0 24px rgba(0,0,0,0.03); border: none; padding: 20px 15px; position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 100;}
+        .sidebar-logo { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; margin-bottom: 40px; padding-left: 10px;}
+        .nav-item a { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-radius: 14px; margin-bottom: 8px; padding: 12px 15px;
+            color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item a:hover:not(.active) { background: #f8fafc; transform: translateX(6px); color: #0f172a; }
+        .nav-item a.active { 
+            background: linear-gradient(135deg, #6366f1, #4f46e5); 
+            color: white !important; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25); 
+        }
+
+        /* 2. GRADIENT BALANCE CARDS */
+        .balance-card { 
+            transition: all 0.3s ease; border: none; border-radius: 24px; padding: 24px;
+            position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .balance-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        .balance-card::after { 
+            content: ''; position: absolute; top: -30px; right: -30px; 
+            width: 120px; height: 120px; border-radius: 50%; opacity: 0.15; background: white; 
+        }
+        
+        .bg-total { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; }
+        .bg-get { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .bg-pay { background: linear-gradient(135deg, #f43f5e, #e11d48); color: white; }
+
+        /* 3. GROUP CARDS MODERN LOOK */
+        .group-card { 
+            transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.04); border-radius: 20px;
+            text-decoration: none; display: flex; flex-direction: column; background: white;
+        }
+        .group-card:hover { 
+            transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); border-color: #6366f1;
+        }
+        
+        /* 4. ACTIVITY LIST */
+        .activity-card { background: white; border-radius: 24px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.03); padding: 20px;}
+        .activity-item { transition: 0.2s; padding: 10px; border-radius: 16px; }
+        .activity-item:hover { background: #f8fafc; transform: translateX(4px); }
+
+        /* 5. BUTTONS & INPUTS */
+        .btn-premium { 
+            background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; 
+            font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4); color: white;}
+        .premium-input { background: #f8fafc; border: 2px solid transparent; transition: 0.3s; padding: 12px 20px; border-radius: 15px; }
+        .premium-input:focus { border-color: #6366f1; background: white; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); outline: none; }
+        
+        /* Modal Radio Selection */
+        .category-box { transition: all 0.2s ease; background: #fafafa; border: 2px solid #eee !important; cursor: pointer; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .category-box:hover { background: #f0f0f0; border-color: #ddd !important; }
+        .btn-check:checked + .category-box { background-color: #f5f3ff !important; border-color: #4f46e5 !important; color: #4f46e5 !important; transform: scale(1.05); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.1); }
+        
+        .main-wrapper { padding: 30px 40px; margin-left: 260px; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar d-flex flex-column">
+    <div class="sidebar-logo">
+        <span class="text-primary fs-3 me-2">🤝</span>SplitMitra
+    </div>
+    <div class="nav-item"><a href="{% url 'dashboard' %}" class="active"><i class="bi bi-grid-1x2-fill fs-5"></i> Dashboard</a></div>
+    <div class="nav-item"><a href="{% url 'my_groups' %}"><i class="bi bi-people-fill fs-5"></i> My Groups</a></div>
+    <div class="nav-item"><a href="{% url 'analytics' %}"><i class="bi bi-bar-chart-fill fs-5"></i> Analytics</a></div>
+    <div class="nav-item"><a href="#"><i class="bi bi-person-heart fs-5"></i> Friends</a></div>
+    <div class="nav-item"><a href="#"><i class="bi bi-activity"></i> Activity</a></div>
+    
+    <div class="nav-item mt-auto"><a href="#"><i class="bi bi-gear-fill fs-5"></i> Settings</a></div>
+    <div class="nav-item mt-2"><a href="{% url 'logout' %}" class="text-danger"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></div>
+</aside>
+
+<main class="main-wrapper">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="input-group" style="max-width: 350px;">
+            <span class="input-group-text bg-white border-0 rounded-start-pill ps-4 shadow-sm"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-0 rounded-end-pill shadow-sm premium-input" placeholder="Search groups...">
+        </div>
+        <div class="d-flex align-items-center gap-4">
+            <div class="position-relative" style="cursor: pointer;">
+                <i class="bi bi-bell-fill fs-4 text-muted"></i>
+                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+            </div>
+            <div class="d-flex align-items-center gap-3 bg-white px-3 py-2 rounded-pill shadow-sm" style="cursor: pointer;">
+                <img src="https://ui-avatars.com/api/?name={{ request.user.first_name|default:request.user.username }}&background=6366f1&color=fff" class="rounded-circle" width="36" alt="User">
+                <span class="fw-bold text-capitalize text-dark">{{ request.user.first_name|default:request.user.username }}</span>
+                <i class="bi bi-chevron-down small text-muted"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="fw-bold mb-1" style="letter-spacing: -0.5px;">Welcome back, {{ request.user.first_name|default:request.user.username }}! 👋</h2>
+        <p class="text-muted fw-medium">Here's your financial overview on <b>SplitMitra</b>.</p>
+    </div>
+
+    <div class="row mb-5 g-4">
+        <div class="col-md-4">
+            <div class="balance-card bg-total d-flex flex-column justify-content-between h-100">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <p class="mb-0 text-white-50 fw-bold tracking-wide" style="font-size: 0.85rem;">TOTAL BALANCE</p>
+                    <div class="bg-white bg-opacity-10 p-2 rounded-3"><i class="bi bi-wallet2 fs-5"></i></div>
+                </div>
+                <h1 class="fw-bold mb-0 display-6">₹ {{ total_balance|default:"0.00" }}</h1>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="balance-card bg-get d-flex flex-column justify-content-between h-100">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <p class="mb-0 text-white-50 fw-bold tracking-wide" style="font-size: 0.85rem;">YOU WILL GET</p>
+                    <div class="bg-white bg-opacity-25 p-2 rounded-3"><i class="bi bi-arrow-down-left fs-5"></i></div>
+                </div>
+                <h1 class="fw-bold mb-0 display-6">₹ {{ will_get|default:"0.00" }}</h1>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="balance-card bg-pay d-flex flex-column justify-content-between h-100">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <p class="mb-0 text-white-50 fw-bold tracking-wide" style="font-size: 0.85rem;">YOU WILL PAY</p>
+                    <div class="bg-white bg-opacity-25 p-2 rounded-3"><i class="bi bi-arrow-up-right fs-5"></i></div>
+                </div>
+                <h1 class="fw-bold mb-0 display-6">₹ {{ will_pay|default:"0.00" }}</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">Active Groups</h5>
+                <button class="btn btn-premium rounded-pill px-4 py-2" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                    <i class="bi bi-plus-lg me-1"></i> New Group
+                </button>
+            </div>
+            
+            <div class="row g-4">
+                {% for group in groups|slice:":4" %}
+                <div class="col-md-6">
+                    <a href="{% url 'group_detail' group.id %}" class="group-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center fs-4" style="width: 50px; height: 50px;">
+                                {% if group.category == 'home' %}🏠
+                                {% elif group.category == 'trip' %}✈️
+                                {% elif group.category == 'couple' %}👩‍❤️‍👨
+                                {% elif group.category == 'personal' %}👤
+                                {% elif group.category == 'business' %}💼
+                                {% elif group.category == 'office' %}🏢
+                                {% elif group.category == 'sports' %}⚽
+                                {% else %}🎟️{% endif %}
+                            </div>
+                            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill fw-medium text-capitalize">{{ group.category }}</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">{{ group.name }}</h5>
+                        <div class="mt-auto pt-4 d-flex justify-content-between align-items-center">
+                            <div class="d-flex">
+                                {% for member in group.members.all|slice:":3" %}
+                                    <img src="https://ui-avatars.com/api/?name={{ member.first_name|default:member.username }}&background=random" class="rounded-circle border border-2 border-white" width="32" style="margin-left: -10px;">
+                                {% endfor %}
+                            </div>
+                            <span class="text-muted fw-bold small">{{ group.members.count }} Member{{ group.members.count|pluralize }} <i class="bi bi-chevron-right ms-1"></i></span>
+                        </div>
+                    </a>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5 bg-white rounded-4 shadow-sm">
+                    <h1 class="display-1">🚀</h1>
+                    <h4 class="fw-bold mt-3">Ready to split?</h4>
+                    <p class="text-muted mb-4">Create your first group to start tracking expenses.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <h5 class="fw-bold mb-4">Recent Activity</h5>
+            <div class="activity-card h-100">
+                {% for activity in recent_activities %}
+                <div class="activity-item d-flex align-items-center mb-3">
+                    <img src="https://ui-avatars.com/api/?name={{ activity.paid_by.username }}&background=random" class="rounded-circle me-3 shadow-sm" width="40">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">
+                            {% if activity.paid_by == request.user %}You{% else %}{{ activity.paid_by.first_name|default:activity.paid_by.username }}{% endif %}
+                        </div>
+                        <div class="text-muted small">added in <b>{{ activity.group.name }}</b></div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold text-dark">₹{{ activity.amount }}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">{{ activity.date|timesince }} ago</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5">
+                    <i class="bi bi-clipboard-data text-muted opacity-50 fs-1"></i>
+                    <p class="text-muted small mt-2">No transactions yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h4 class="fw-bold">Create a new group</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{% url 'create_group' %}">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="small text-muted fw-bold mb-2 d-block tracking-wide">GROUP NAME</label>
+                        <input type="text" name="group_name" class="form-control premium-input" placeholder="e.g. Goa Trip, Room Rent" required>
+                    </div>
+                    
+                    <label class="small text-muted fw-bold mb-3 d-block tracking-wide">SELECT CATEGORY</label>
+                    <div class="row g-3 text-center mb-4">
+                        <div class="col-3">
+                            <input type="radio" name="category" value="home" id="cat_home" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_home">
+                                <span class="fs-4 mb-1">🏠</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Home</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="trip" id="cat_trip" class="btn-check" checked>
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_trip">
+                                <span class="fs-4 mb-1">✈️</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Trip</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="couple" id="cat_couple" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_couple">
+                                <span class="fs-4 mb-1">👩‍❤️‍👨</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Couple</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="personal" id="cat_personal" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_personal">
+                                <span class="fs-4 mb-1">👤</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Personal</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="business" id="cat_business" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_business">
+                                <span class="fs-4 mb-1">💼</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Business</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="office" id="cat_office" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_office">
+                                <span class="fs-4 mb-1">🏢</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Office</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="sports" id="cat_sports" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_sports">
+                                <span class="fs-4 mb-1">⚽</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Sports</small>
+                            </label>
+                        </div>
+                        <div class="col-3">
+                            <input type="radio" name="category" value="others" id="cat_others" class="btn-check">
+                            <label class="category-box p-2 rounded-4 border w-100" for="cat_others">
+                                <span class="fs-4 mb-1">🎟️</span><br><small class="fw-bold text-muted" style="font-size: 0.7rem;">Others</small>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-premium btn-lg rounded-pill py-3">Create Group <i class="bi bi-arrow-right ms-2"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

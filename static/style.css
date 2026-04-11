@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif; /* Clean, modern font */
+    background-color: #f4f6f9; /* Light background from image */
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+    width: 260px;
+    height: 100vh;
+    background: white;
+    position: fixed;
+    border-right: 1px solid #eaeaea;
+    padding: 20px 0;
+}
+.sidebar-logo {
+    font-weight: 700;
+    font-size: 1.25rem;
+    padding: 0 24px 30px;
+    color: #1e1e2f;
+}
+.sidebar-logo img { width: 24px; margin-right: 8px; }
+.nav-item a {
+    color: #64748b;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+}
+.nav-item a:hover, .nav-item a.active {
+    background: #eef2ff;
+    color: #4f46e5; /* Indigo */
+    border-right: 3px solid #4f46e5;
+}
+.nav-item i { margin-right: 12px; font-size: 1.1rem; }
+
+/* --- Main Content --- */
+.main-wrapper {
+    margin-left: 260px;
+    padding: 30px 40px;
+}
+
+/* --- Cards Styling --- */
+.custom-card {
+    background: white;
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    padding: 20px;
+}
+
+/* Balance Text Colors */
+.text-red { color: #e11d48; }
+.text-green { color: #16a34a; }
+
+/* Group Cards Exact Colors */
+.bg-purple { background: #6b63ff; color: white; }
+.bg-teal { background: #2a9d8f; color: white; }
+.bg-pink { background: #b554e5; color: white; }
+.bg-orange { background: #f4a261; color: white; }
+
+.group-card {
+    border-radius: 12px;
+    padding: 16px;
+    height: 100%;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.group-icon { font-size: 1.5rem; }
+
+/* Activity Feed */
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+.activity-item img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+.activity-text { font-size: 0.9rem; color: #333; }
+.activity-time { font-size: 0.75rem; color: #888; }

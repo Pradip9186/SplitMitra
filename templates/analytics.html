@@ -1,0 +1,295 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - SplitMitra Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { 
+            background-color: #f4f7f9; 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            color: #1e1e2f;
+        }
+
+        /* SIDEBAR - Ultra Professional */
+        .sidebar { background: #ffffff; box-shadow: 4px 0 24px rgba(0,0,0,0.03); border: none; padding: 20px 15px; position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 100;}
+        .sidebar-logo { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; margin-bottom: 40px; padding-left: 10px;}
+        .nav-item a { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-radius: 14px; margin-bottom: 8px; padding: 12px 15px;
+            color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px; text-decoration: none;
+        }
+        .nav-item a:hover:not(.active) { background: #f8fafc; transform: translateX(6px); color: #0f172a; }
+        .nav-item a.active { 
+            background: linear-gradient(135deg, #6366f1, #4f46e5); 
+            color: white !important; 
+            box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25); 
+        }
+
+        .main-wrapper { padding: 30px 40px; margin-left: 260px; }
+
+        /* ANALYTICS CARDS */
+        .stat-card-pro {
+            background: white; border-radius: 28px; padding: 35px;
+            border: 1px solid rgba(0,0,0,0.03); transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+        }
+        
+        .chart-box {
+            position: relative; height: 350px; width: 100%;
+        }
+
+        .premium-gradient-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white; border-radius: 32px; padding: 40px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+        
+        .premium-gradient-card::before {
+            content: ''; position: absolute; top: -50px; right: -50px; 
+            width: 150px; height: 150px; border-radius: 50%; 
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-download {
+            background: white; color: #0f172a; border: none;
+            font-weight: 700; transition: 0.3s;
+        }
+        .btn-download:hover {
+            background: #f8fafc; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+
+        /* ✅ UPDATE: Custom Dropdown Styling (For Pro Look and proper alignment) */
+        #splitmitra-filter-dropdown .dropdown-toggle {
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #1e1e2f;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 150px;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-toggle:hover {
+            border-color: #6366f1;
+            background-color: white;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-toggle::after {
+            display: none; /* Hide native Bootstrap arrow */
+        }
+
+        #splitmitra-filter-dropdown .dropdown-toggle .bi-chevron-down {
+            margin-left: 12px; /* ✅ FIX: Proper arrow separation */
+            font-weight: 800;
+            color: #64748b;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-menu {
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            padding: 10px;
+            background: white;
+            min-width: 180px;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-item {
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-weight: 600;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-item:hover,
+        #splitmitra-filter-dropdown .dropdown-item.active {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        #splitmitra-filter-dropdown .dropdown-item.active {
+            background-color: rgba(99, 102, 241, 0.05);
+            color: #6366f1;
+        }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar d-flex flex-column">
+    <div class="sidebar-logo"><span class="text-primary fs-3 me-2">🤝</span>SplitMitra</div>
+    <div class="nav-item"><a href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2-fill fs-5"></i> Dashboard</a></div>
+    <div class="nav-item"><a href="{% url 'my_groups' %}"><i class="bi bi-people-fill fs-5"></i> My Groups</a></div>
+    <div class="nav-item"><a href="{% url 'analytics' %}" class="active"><i class="bi bi-bar-chart-fill fs-5"></i> Analytics</a></div>
+    <div class="nav-item"><a href="#"><i class="bi bi-person-heart fs-5"></i> Friends</a></div>
+    <div class="nav-item"><a href="#"><i class="bi bi-activity fs-5"></i> Activity</a></div>
+    <div class="nav-item mt-auto"><a href="#"><i class="bi bi-gear-fill fs-5"></i> Settings</a></div>
+    <div class="nav-item mt-2"><a href="{% url 'logout' %}" class="text-danger"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></div>
+</aside>
+
+<main class="main-wrapper">
+    <div class="mb-5">
+        <h2 class="fw-800 mb-1" style="letter-spacing: -1px;">Financial Insights</h2>
+        <p class="text-muted fw-bold">Track where your money is going</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="stat-card-pro h-100">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h5 class="fw-800 mb-0">Expense Distribution</h5>
+                        <small class="text-muted">By Category</small>
+                    </div>
+                    
+                    <form method="GET" action="{% url 'analytics' %}" id="filterForm" class="m-0">
+                        <input type="hidden" name="filter" id="filterValue" value="{{ current_filter }}">
+                        
+                        <div class="dropdown" id="splitmitra-filter-dropdown">
+                            <button class="btn btn-sm rounded-pill px-3 py-2 dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="selectedFilterText">
+                                    {% if current_filter == 'week' %}This Week
+                                    {% elif current_filter == 'month' %}This Month
+                                    {% elif current_filter == 'year' %}This Year
+                                    {% elif current_filter == 'all' %}All Time
+                                    {% else %}Select Filter{% endif %}
+                                </span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+                                <li><a class="dropdown-item {% if current_filter == 'week' %}active{% endif %}" href="#" data-value="week"><i class="bi bi-calendar-event"></i> This Week</a></li>
+                                <li><a class="dropdown-item {% if current_filter == 'month' %}active{% endif %}" href="#" data-value="month"><i class="bi bi-calendar-month"></i> This Month</a></li>
+                                <li><a class="dropdown-item {% if current_filter == 'year' %}active{% endif %}" href="#" data-value="year"><i class="bi bi-calendar4-range"></i> This Year</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item {% if current_filter == 'all' %}active{% endif %}" href="#" data-value="all"><i class="bi bi-calendar3"></i> All Time</a></li>
+                            </ul>
+                        </div>
+                    </form>
+
+                </div>
+                <div class="chart-box">
+                    <canvas id="spendingChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="premium-gradient-card h-100 d-flex flex-column justify-content-center">
+                <div class="mb-auto">
+                    <div class="bg-white bg-opacity-10 d-inline-block p-3 rounded-4 mb-4">
+                        <i class="bi bi-lightning-charge-fill fs-3 text-warning"></i>
+                    </div>
+                </div>
+                <p class="text-white-50 fw-bold small tracking-widest mb-2 text-uppercase">PERSONAL SPENDING</p>
+                <h1 class="display-3 fw-800 mb-4" style="letter-spacing: -2px;">₹ {{ total_spent|floatformat:1 }}</h1>
+                <p class="opacity-50 small mb-5 lh-lg">Aapne <strong>{{ filter_label|lower }}</strong> total itna amount pay kiya hai. Is data ko use karke aap apne budget ko better control kar sakte hain.</p>
+                
+                <button class="btn btn-download rounded-pill py-3 px-4 shadow-sm w-100">
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download Full Report
+                </button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // ✅ JS to handle custom dropdown selection and form submission
+    document.querySelectorAll('#splitmitra-filter-dropdown .dropdown-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const value = this.getAttribute('data-value');
+            document.getElementById('filterValue').value = value;
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Advanced Chart Logic
+    const ctx = document.getElementById('spendingChart').getContext('2d');
+    
+    // Values from Django Backend
+    const rawData = {{ category_data|safe }};
+    const labels = {{ category_labels|safe }};
+    
+    // Check if total spending is 0
+    const total = rawData.reduce((a, b) => a + b, 0);
+    const displayData = total === 0 ? [1] : rawData;
+    const displayLabels = total === 0 ? ['No Spending'] : labels;
+    
+    // Colors for 8 categories + 1 grey color if empty
+    const displayColors = total === 0 ? ['#f1f5f9'] : [
+        '#6366f1', // Home (Indigo)
+        '#10b981', // Trip (Emerald)
+        '#f43f5e', // Couple (Rose)
+        '#f59e0b', // Personal (Amber)
+        '#8b5cf6', // Business (Violet)
+        '#3b82f6', // Office (Blue)
+        '#ec4899', // Sports (Pink)
+        '#0ea5e9'  // Others (Sky)
+    ];
+
+    const spendingChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: displayLabels,
+            datasets: [{
+                label: 'Spending (₹)',
+                data: displayData,
+                backgroundColor: displayColors,
+                borderWidth: 0,
+                hoverOffset: total === 0 ? 0 : 20, 
+                borderRadius: 12,
+                spacing: total === 0 ? 0 : 8 
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            cutout: '80%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { family: 'Plus Jakarta Sans', size: 13, weight: '700' },
+                        padding: 20,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#1e293b',
+                    padding: 15,
+                    titleFont: { family: 'Plus Jakarta Sans', size: 14, weight: 'bold' },
+                    bodyFont: { family: 'Plus Jakarta Sans', size: 14 },
+                    displayColors: false,
+                    cornerRadius: 12,
+                    callbacks: {
+                        label: function(context) {
+                            if (total === 0) return ' No expenses in this period';
+                            return ' ₹ ' + context.raw;
+                        }
+                    }
+                }
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        }
+    });
+</script>
+
+</body>
+</html>
