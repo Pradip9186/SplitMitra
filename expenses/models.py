@@ -3,10 +3,13 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-# --- 1. User Profile (For Phone Number) ---
+# --- 1. User Profile (Updated for UPI ID) ---
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    
+    # ✅ NAYA FIELD: UPI ID store karne ke liye
+    upi_id = models.CharField(max_length=50, blank=True, null=True, help_text="e.g., example@upi")
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

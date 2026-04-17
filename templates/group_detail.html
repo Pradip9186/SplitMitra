@@ -205,13 +205,18 @@
                             <input type="tel" name="phone" class="form-control premium-input" placeholder="+91 9876543210" required>
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label class="small fw-800 text-muted mb-2">EMAIL ADDRESS</label>
                             <input type="email" name="email" class="form-control premium-input" placeholder="rahul@example.com" required>
-                            <small class="text-muted d-block mt-2">An invitation email will be sent to this address.</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="small fw-800 text-muted mb-2">UPI ID <span class="fw-normal text-muted">(Optional)</span></label>
+                            <input type="text" name="upi_id" class="form-control premium-input" placeholder="e.g. rahul@okicici">
+                            <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i> So friends can pay directly via QR code.</small>
                         </div>
 
-                        <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill fw-800 shadow-lg" style="background: #6366f1; border:none;">
+                        <button type="submit" class="btn w-100 py-3 rounded-pill fw-800 shadow-lg text-white" style="background: #6366f1; border:none;">
                             Add to Group
                         </button>
                     </form>
@@ -311,7 +316,7 @@
             customSection.style.display = 'none';
             customInputs.forEach(input => {
                 input.removeAttribute('required');
-                input.value = ''; // Reset values when switching to Equal
+                input.value = ''; 
             });
         }
     }

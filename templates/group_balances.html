@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e1e2f; }
@@ -23,7 +24,7 @@
             justify-content: center; border-radius: 12px; text-decoration: none;
         }
 
-        /* 2. SUMMARY CARDS (Top Blue/White section) */
+        /* 2. SUMMARY CARDS */
         .summary-container {
             background: white; border-radius: 20px; padding: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-top: -45px;
@@ -32,7 +33,7 @@
         .total-box { background: #6366f1; color: white; border-radius: 15px; padding: 15px; width: 48%; }
         .member-box { background: #f8fafc; border: 1px solid #eee; border-radius: 15px; padding: 15px; width: 48%; }
 
-        /* 3. TABS (Screenshot Style) */
+        /* 3. TABS */
         .tab-nav { margin-top: 25px; gap: 10px; display: flex; overflow-x: auto; padding-bottom: 5px; }
         .tab-item { 
             padding: 8px 20px; border-radius: 12px; font-weight: 700; font-size: 0.85rem;
@@ -40,7 +41,7 @@
         }
         .tab-item.active { background: #10b981; color: white; border-color: #10b981; }
 
-        /* 4. DEBT CARDS (The main feature) */
+        /* 4. DEBT CARDS */
         .debt-card {
             background: white; border-radius: 24px; padding: 24px;
             margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02);
@@ -58,10 +59,23 @@
         .avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
         .btn-settle-up {
-            background: #6366f1; color: white; border-radius: 12px;
-            padding: 10px; font-weight: 700; border: none; font-size: 0.85rem; width: 100%; margin-top: 15px;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            background: #1e293b; color: white; border-radius: 12px;
+            padding: 10px; font-weight: 700; border: none; font-size: 0.85rem; width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transition: 0.2s;
         }
+        .btn-settle-up:hover { background: #0f172a; color: white; }
+        
+        /* ✅ NAYA: QR Pay Button Styling */
+        .btn-qr-pay {
+            background: white; color: #6366f1; border-radius: 12px; border: 2px solid #6366f1;
+            padding: 8px; font-weight: 800; font-size: 0.85rem; width: 100%; margin-top: 10px;
+            transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-qr-pay:hover { background: #6366f1; color: white; }
+        
+        /* QR Modal Styling */
+        #qrContainer { background: white; padding: 20px; border-radius: 16px; display: inline-block; border: 2px dashed #cbd5e1; }
+        #qrContainer img { margin: 0 auto; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -103,8 +117,8 @@
         <div class="tab-nav">
             <a href="{% url 'group_detail' group.id %}" class="tab-item">Expenses</a>
             <a href="#" class="tab-item active">Balances</a>
-            <a href="#" class="tab-item">Payments</a>
-            <a href="#" class="tab-item">Settle up</a>
+            <a href="#" class="tab-item">Activity</a>
+            <a href="#" class="tab-item">Settings</a>
         </div>
 
         <div class="mt-4 pb-5">
@@ -112,7 +126,7 @@
 
             {% for debt in final_debts %}
             <div class="debt-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="text-center" style="width: 90px;">
                         <img src="https://ui-avatars.com/api/?name={{ debt.from_user.username }}&background=random" class="avatar mb-2">
                         <small class="d-block fw-700 text-truncate">{% if debt.from_user == request.user %}You{% else %}{{ debt.from_user.username }}{% endif %}</small>
@@ -131,13 +145,28 @@
                 </div>
 
                 {% if debt.from_user == request.user %}
-                <form action="{% url 'settle_up' group.id debt.to_user.id %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="amount" value="{{ debt.amount }}">
-                    <button type="submit" class="btn-settle-up">Settle up</button>
-                </form>
+                <div class="row g-2 mt-2">
+                    <div class="col-12">
+                        <form action="{% url 'settle_up' group.id debt.to_user.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="amount" value="{{ debt.amount }}">
+                            <button type="submit" class="btn-settle-up"><i class="bi bi-check-circle-fill me-1"></i> I Have Paid Outside</button>
+                        </form>
+                    </div>
+                    {% if debt.to_user.profile.upi_id %}
+                    <div class="col-12">
+                        <button class="btn-qr-pay" onclick="showQRModal('{{ debt.to_user.username }}', '{{ debt.to_user.profile.upi_id }}', '{{ debt.amount|floatformat:2 }}')">
+                            <i class="bi bi-qr-code-scan fs-5"></i> Scan & Pay {{ debt.to_user.username }}
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="col-12 text-center mt-2">
+                        <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-info-circle text-warning"></i> Ask {{ debt.to_user.username }} to add UPI ID for Quick Pay</small>
+                    </div>
+                    {% endif %}
+                </div>
                 {% else %}
-                <button class="btn btn-light w-100 mt-3 rounded-3 fw-bold text-muted" style="font-size: 0.8rem; border: 1px dashed #ddd;">Remind</button>
+                <button class="btn btn-light w-100 mt-3 rounded-3 fw-bold text-muted" style="font-size: 0.8rem; border: 1px dashed #ddd;">Remind {{ debt.from_user.username }}</button>
                 {% endif %}
             </div>
             {% empty %}
@@ -150,6 +179,64 @@
         </div>
     </div>
 
+    <div class="modal fade" id="qrPaymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 28px; background: #f8fafc;">
+                <div class="modal-header border-0 pt-4 px-4 pb-0 position-relative">
+                    <button type="button" class="btn-close shadow-none position-absolute" style="right: 20px; top: 20px;" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <h4 class="fw-800 mb-1">Pay <span id="modalReceiverName" class="text-primary"></span></h4>
+                    <p class="text-muted fw-bold mb-4">Scan using GPay, PhonePe, or Paytm</p>
+                    
+                    <div id="qrContainer" class="shadow-sm bg-white mb-3">
+                        </div>
+                    
+                    <h1 class="display-4 fw-800 text-dark mb-1">₹ <span id="modalAmount"></span></h1>
+                    <div class="bg-light d-inline-block px-3 py-2 rounded-pill mt-2 border">
+                        <small class="fw-bold text-muted">UPI ID: <span id="modalUpiId" class="text-dark"></span></small>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-4 text-start rounded-4 border-0 small fw-bold">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Note: After paying via app, don't forget to click <b>"I Have Paid Outside"</b> to clear the balance here.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    var qrCodeObj = null;
+
+    function showQRModal(name, upi_id, amount) {
+        // Set Details in Modal
+        document.getElementById('modalReceiverName').innerText = name;
+        document.getElementById('modalAmount').innerText = amount;
+        document.getElementById('modalUpiId').innerText = upi_id;
+
+        // Clear Old QR if any
+        document.getElementById('qrContainer').innerHTML = "";
+
+        // Create UPI Payment Link
+        var upiLink = "upi://pay?pa=" + upi_id + "&pn=" + encodeURIComponent(name) + "&am=" + amount + "&cu=INR";
+
+        // Generate New QR
+        qrCodeObj = new QRCode(document.getElementById("qrContainer"), {
+            text: upiLink,
+            width: 200,
+            height: 200,
+            colorDark : "#1e1e2f",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        // Open Bootstrap Modal
+        var myModal = new bootstrap.Modal(document.getElementById('qrPaymentModal'));
+        myModal.show();
+    }
+</script>
+
 </body>
 </html>

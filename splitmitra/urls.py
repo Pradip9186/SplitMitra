@@ -18,8 +18,10 @@ from expenses.views import (
     add_member,
     my_groups,
     analytics_view,
-    group_balances,  # <-- Naya function yahan import kiya
-    settle_up        # <-- Naya function yahan import kiya
+    group_balances,  
+    settle_up,       
+    settings_view,
+    friends_view     
 )
 
 urlpatterns = [
@@ -35,11 +37,13 @@ urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),  
     path('my-groups/', my_groups, name='my_groups'), 
     path('analytics/', analytics_view, name='analytics'),
+    path('settings/', settings_view, name='settings'),
+    path('friends/', friends_view, name='friends'), 
     
     # --- Group Detail & Balances (Real-time tracking) ---
     path('group/<int:group_id>/', group_detail, name='group_detail'),
-    path('group/<int:group_id>/balances/', group_balances, name='group_balances'), # <-- Balances Page Path
-    path('group/<int:group_id>/settle/<int:receiver_id>/', settle_up, name='settle_up'), # <-- Settle Up Action
+    path('group/<int:group_id>/balances/', group_balances, name='group_balances'), 
+    path('group/<int:group_id>/settle/<int:receiver_id>/', settle_up, name='settle_up'), 
     
     # --- Group & Expense Management ---
     path('create-group/', create_group, name='create_group'), 
