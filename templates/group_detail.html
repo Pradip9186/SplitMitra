@@ -68,6 +68,77 @@
         .modal-content { border-radius: 32px; border: none; padding: 10px; }
         .premium-input { background: #f8fafc; border: 2px solid transparent; border-radius: 18px; padding: 16px; font-weight: 600; transition: 0.3s; }
         .premium-input:focus { border-color: #6366f1; background: white; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+        /* MEMBER ITEM STYLES */
+        .member-item {
+            background: white; border-radius: 18px; padding: 16px; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(0,0,0,0.03); transition: 0.3s;
+        }
+        .member-item:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            border-color: #6366f1;
+        }
+        .member-info {
+            display: flex; align-items: center; gap: 12px; flex: 1;
+        }
+        .member-avatar {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 700; font-size: 0.9rem;
+        }
+        .member-details h6 {
+            margin: 0; font-weight: 700; font-size: 0.95rem;
+        }
+        .member-details small {
+            display: block; color: #64748b; font-weight: 500; margin-top: 2px;
+        }
+        .admin-badge {
+            background: #10b981; color: white; font-size: 0.7rem;
+            padding: 4px 10px; border-radius: 20px; font-weight: 600; margin-left: 8px;
+        }
+        .member-menu-btn {
+            background: transparent; border: none; padding: 4px 8px;
+            border-radius: 10px; cursor: pointer; transition: 0.3s;
+            font-size: 1.2rem; display: flex; align-items: center; color: #64748b;
+            position: relative;
+        }
+        .member-menu-btn:hover {
+            color: #6366f1;
+        }
+
+        /* CONTEXT MENU */
+        .member-context-menu {
+            position: absolute; background: white; border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.05);
+            z-index: 1000; min-width: 160px;
+        }
+        .member-context-menu button {
+            display: block; width: 100%; padding: 12px 16px; border: none;
+            background: transparent; text-align: left; font-weight: 600;
+            cursor: pointer; font-size: 0.9rem; color: #1e1e2f; transition: 0.2s;
+        }
+        .member-context-menu button:hover {
+            background: #f1f5f9;
+        }
+        .member-context-menu button.delete-btn {
+            color: #dc2626;
+        }
+        .member-context-menu button.delete-btn:hover {
+            background: #fee2e2;
+        }
+
+        /* ADD MORE MEMBERS SECTION */
+        .add-more-members-btn {
+            width: 100%; padding: 16px; border: 2px dashed #6366f1;
+            background: transparent; border-radius: 18px; color: #6366f1;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .add-more-members-btn:hover {
+            background: #eef2ff; border-color: #4f46e5;
+        }
     </style>
 </head>
 <body>
@@ -94,7 +165,7 @@
             </div>
             <div class="d-flex gap-2">
                 <div class="back-btn" data-bs-toggle="modal" data-bs-target="#addFriendModal" style="cursor: pointer;"><i class="bi bi-person-plus-fill"></i></div>
-                <div class="back-btn"><i class="bi bi-three-dots"></i></div>
+                <div class="back-btn" data-bs-toggle="modal" data-bs-target="#settingsModal" style="cursor: pointer;"><i class="bi bi-gear-fill"></i></div>
             </div>
         </div>
     </div>
@@ -104,7 +175,7 @@
         <div class="premium-tabs d-flex">
             <a href="{% url 'group_detail' group.id %}" class="p-tab active">Expenses</a>
             <a href="{% url 'group_balances' group.id %}" class="p-tab">Balances</a>
-            <a href="#" class="p-tab">Activity</a>
+            <a href="{% url 'activity' %}" class="p-tab">Activity</a>
         </div>
 
         <div class="summary-card-pro">
@@ -154,20 +225,40 @@
 
             {% for expense in expenses %}
                 <div class="expense-row-pro">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1">
                         <div class="date-icon">
                             <small class="fw-800 text-primary text-uppercase" style="font-size: 0.6rem;">{{ expense.date|date:"M" }}</small>
                             <span class="fw-800 text-dark fs-5">{{ expense.date|date:"d" }}</span>
                         </div>
-                        <div>
+                        <div class="flex-grow-1">
                             <h6 class="fw-800 mb-0 text-dark">{{ expense.description }}</h6>
                             <small class="text-muted fw-bold">Paid by <span class="text-dark">{% if expense.paid_by == request.user %}You{% else %}{{ expense.paid_by.first_name|default:expense.paid_by.username }}{% endif %}</span></small>
+                            
+                            <!-- Bills Section -->
+                            {% if expense.bills.count > 0 %}
+                            <div class="mt-2" id="bills-{{ expense.id }}">
+                                <small class="text-success fw-bold"><i class="bi bi-receipt me-1"></i> {{ expense.bills.count }} bill(s)</small>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="text-end">
+                    <div class="text-end d-flex flex-column align-items-end gap-2">
                         <h5 class="fw-800 mb-0">₹ {{ expense.amount }}</h5>
+                        <!-- Bill Upload Button -->
+                        <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" 
+                                onclick="openBillUploadForExpense({{ expense.id }})" 
+                                style="font-size: 0.75rem; padding: 4px 12px;">
+                            <i class="bi bi-paperclip me-1"></i> Bill
+                        </button>
                     </div>
                 </div>
+                
+                <!-- Load bills on page load -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        loadExpenseBills({{ expense.id }});
+                    });
+                </script>
             {% empty %}
                 <div class="text-center py-5 bg-white rounded-5 shadow-sm">
                     <span class="display-1 opacity-25">🧾</span>
@@ -303,6 +394,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Get CSRF token
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+               document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+               '';
+    }
+
     // Custom Split ko dikhane/chupane ka logic
     function toggleCustomSplit() {
         const isCustom = document.getElementById('splitCustom').checked;
@@ -320,6 +418,143 @@
             });
         }
     }
+
+    // Member context menu
+    function toggleMemberMenu(memberId) {
+        const menu = document.getElementById('menu-' + memberId);
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            // Hide all other menus
+            document.querySelectorAll('.member-context-menu').forEach(m => m.style.display = 'none');
+            menu.style.display = 'block';
+        }
+    }
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.member-menu-btn') && !e.target.closest('.member-context-menu')) {
+            document.querySelectorAll('.member-context-menu').forEach(m => m.style.display = 'none');
+        }
+    });
+
+    // Make admin function
+    function makeAdmin(groupId, memberId) {
+        if (confirm('Are you sure you want to make this member an admin?')) {
+            const csrfToken = getCSRFToken();
+            fetch(`/group/${groupId}/make-admin/${memberId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error making member admin. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Error making member admin. Please try again.');
+            });
+        }
+    }
+
+    // Remove member function
+    function removeMember(groupId, memberId) {
+        if (confirm('Are you sure you want to remove this member from the group?')) {
+            const csrfToken = getCSRFToken();
+            fetch(`/group/${groupId}/remove-member/${memberId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error removing member. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('Error removing member. Please try again.');
+            });
+        }
+    }
 </script>
+
+<!-- SETTINGS MODAL - MEMBER MANAGEMENT -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h4 class="fw-800">Group Settings</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Add More Members Button -->
+                <button type="button" class="add-more-members-btn mb-4" data-bs-toggle="modal" data-bs-target="#addFriendModal">
+                    <i class="bi bi-plus-lg"></i> Add more members
+                </button>
+
+                <!-- Members List -->
+                <h6 class="fw-800 text-dark mb-3">GROUP MEMBERS ({{ group.members.count }})</h6>
+                <div class="members-list">
+                    {% for member in group.members.all %}
+                        <div class="member-item" id="member-{{ member.id }}">
+                            <div class="member-info">
+                                <div class="member-avatar">
+                                    {{ member.first_name|first|upper }}
+                                </div>
+                                <div class="member-details">
+                                    <div>
+                                        <h6>{{ member.first_name|default:member.username }}
+                                            {% if member == group.created_by %}
+                                                <span class="admin-badge">Admin</span>
+                                            {% endif %}
+                                        </h6>
+                                    </div>
+                                    <small>{{ member.email }}</small>
+                                </div>
+                            </div>
+                            
+                            <!-- 3-dot Menu (only for admin) -->
+                            {% if user == group.created_by and member != group.created_by %}
+                                <div style="position: relative;">
+                                    <button type="button" class="member-menu-btn" onclick="toggleMemberMenu({{ member.id }})">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <div class="member-context-menu" id="menu-{{ member.id }}" style="display: none; right: 0; top: 25px;">
+                                        <button type="button" onclick="makeAdmin({{ group.id }}, {{ member.id }})">
+                                            <i class="bi bi-shield-check me-2"></i> Make Admin
+                                        </button>
+                                        <button type="button" class="delete-btn" onclick="removeMember({{ group.id }}, {{ member.id }})">
+                                            <i class="bi bi-trash me-2"></i> Remove Member
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <p class="text-muted small mt-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Only group admin can add or manage members.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BILL UPLOAD & MANAGEMENT MODAL -->
+{% include 'bill_upload_modal.html' %}
+
 </body>
 </html>

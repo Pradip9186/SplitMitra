@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Settings - {{ group.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f9; font-family: 'Plus Jakarta Sans', sans-serif; color: #1e1e2f; }
+        .sidebar { background: #ffffff; box-shadow: 4px 0 24px rgba(0,0,0,0.03); border: none; padding: 20px 15px; position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 100; }
+        .sidebar-logo { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; margin-bottom: 40px; padding-left: 10px; }
+        .nav-item a { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 14px; margin-bottom: 8px; padding: 12px 15px; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-item a:hover:not(.active) { background: #f8fafc; transform: translateX(6px); color: #0f172a; }
+        .nav-item a.active { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white !important; box-shadow: 0 8px 16px rgba(79, 70, 229, 0.25); }
+        .main-wrapper { padding: 30px 40px; margin-left: 260px; }
+        .settings-card { background: white; border-radius: 28px; padding: 36px; box-shadow: 0 15px 40px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
+        .settings-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 30px; }
+        .settings-header h2 { margin: 0; }
+        .member-card { background: #f8fafc; border-radius: 22px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+<aside class="sidebar d-flex flex-column">
+    <div class="sidebar-logo"><span class="text-primary fs-3 me-2">🤝</span>SplitMitra</div>
+    <div class="nav-item"><a href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2-fill fs-5"></i> Dashboard</a></div>
+    <div class="nav-item"><a href="{% url 'my_groups' %}"><i class="bi bi-people-fill fs-5"></i> My Groups</a></div>
+    <div class="nav-item"><a href="{% url 'analytics' %}"><i class="bi bi-bar-chart-fill fs-5"></i> Analytics</a></div>
+    <div class="nav-item"><a href="{% url 'friends' %}"><i class="bi bi-person-heart fs-5"></i> Friends</a></div>
+    <div class="nav-item"><a href="{% url 'activity' %}"><i class="bi bi-activity fs-5"></i> Activity</a></div>
+    <div class="nav-item mt-auto"><a href="{% url 'settings' %}"><i class="bi bi-gear-fill fs-5"></i> Settings</a></div>
+    <div class="nav-item mt-2"><a href="{% url 'logout' %}" class="text-danger"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></div>
+</aside>
+<main class="main-wrapper">
+    <div class="mb-5">
+        <h2 class="fw-800 mb-1">Group Settings</h2>
+        <p class="text-muted fw-bold">Configure members, sharing, and group-level controls for {{ group.name }}.</p>
+    </div>
+
+    <div class="settings-card">
+        <div class="settings-header">
+            <div>
+                <h3 class="fw-bold mb-1">{{ group.name }}</h3>
+                <small class="text-muted text-capitalize">{{ group.category }} group</small>
+            </div>
+            <div class="text-end">
+                <a href="{% url 'group_balances' group.id %}" class="btn btn-outline-primary rounded-pill px-4 py-2">Back to Balances</a>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="p-4 bg-light rounded-4">
+                    <h6 class="fw-bold mb-3">Members</h6>
+                    <p class="mb-0 text-muted">{{ members.count }} members currently in this group.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-4 bg-light rounded-4">
+                    <h6 class="fw-bold mb-3">Your Role</h6>
+                    <p class="mb-0 text-muted">{% if is_admin %}Group Admin{% else %}Member{% endif %}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if is_admin %}
+        <div class="mb-4">
+            <a href="{% url 'edit_group' group.id %}" class="btn btn-primary rounded-pill px-4 py-3 me-3">Edit Group</a>
+            <a href="{% url 'generate_invite_link' group.id %}" class="btn btn-outline-secondary rounded-pill px-4 py-3">Generate Invite Link</a>
+        </div>
+        {% endif %}
+
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3">Group Members</h5>
+            {% for member in members %}
+            <div class="member-card d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="https://ui-avatars.com/api/?name={{ member.first_name|default:member.username }}&background=random&color=fff" class="rounded-circle" width="44">
+                    <div>
+                        <div class="fw-bold">{% if member == request.user %}You{% else %}{{ member.first_name|default:member.username }}{% endif %}</div>
+                        <small class="text-muted">{{ member.email }}</small>
+                    </div>
+                </div>
+                <span class="badge bg-white text-muted border rounded-pill py-2 px-3">{% if member == group.created_by %}Admin{% else %}Member{% endif %}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not is_admin %}
+        <div class="alert alert-info rounded-4 border-0 shadow-sm">
+            <i class="bi bi-info-circle-fill me-2"></i> Only group admins can modify group details or invite links.
+        </div>
+        {% endif %}
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

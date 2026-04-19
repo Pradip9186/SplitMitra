@@ -1,0 +1,455 @@
+<!-- BILL UPLOAD MODAL -->
+<div class="modal fade" id="billUploadModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h4 class="fw-800"><i class="bi bi-receipt me-2"></i> Upload Bill/Receipt</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="billUploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" id="expenseIdForBill" name="expense_id">
+                    
+                    <!-- File Upload Field -->
+                    <div class="mb-4">
+                        <label class="small fw-800 text-muted mb-3 d-block">SELECT FILE <span class="text-danger">*</span></label>
+                        <div class="file-upload-zone border-2 border-dashed border-primary rounded-4 p-4 text-center bg-light" 
+                             style="cursor: pointer; transition: 0.3s;" id="fileUploadZone">
+                            <i class="bi bi-cloud-upload display-4 text-primary mb-2" style="opacity: 0.7;"></i>
+                            <p class="fw-bold text-primary mb-1">Click to upload or drag and drop</p>
+                            <p class="small text-muted">PDF, JPG, PNG, GIF, BMP, WEBP, DOC, DOCX, XLS, XLSX (Max 10 MB)</p>
+                            <input type="file" id="billFile" name="bill" class="d-none" accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.webp,.doc,.docx,.xls,.xlsx" required>
+                        </div>
+                        <small id="fileInfo" class="text-success fw-bold d-block mt-2" style="display: none;"></small>
+                    </div>
+
+                    <!-- Bill Type Selection -->
+                    <div class="mb-4">
+                        <label class="small fw-800 text-muted mb-2 d-block">DOCUMENT TYPE</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="file_type" id="typeBill" value="bill" checked>
+                                    <label class="form-check-label fw-bold" for="typeBill">
+                                        <i class="bi bi-receipt me-1"></i> Bill/Receipt
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="file_type" id="typeInvoice" value="invoice">
+                                    <label class="form-check-label fw-bold" for="typeInvoice">
+                                        <i class="bi bi-file-earmark-text me-1"></i> Invoice
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="file_type" id="typeReceipt" value="receipt">
+                                    <label class="form-check-label fw-bold" for="typeReceipt">
+                                        <i class="bi bi-check-circle me-1"></i> Receipt
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="file_type" id="typeProof" value="proof">
+                                    <label class="form-check-label fw-bold" for="typeProof">
+                                        <i class="bi bi-shield-check me-1"></i> Payment Proof
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="small fw-800 text-muted mb-2 d-block">DESCRIPTION <span class="fw-normal text-muted">(Optional)</span></label>
+                        <textarea name="description" class="form-control premium-input" rows="2" 
+                                  placeholder="E.g., 'Electricity bill for March' or 'Receipt for dinner party'"></textarea>
+                    </div>
+
+                    <!-- Visibility & Primary Options -->
+                    <div class="mb-4 bg-light p-3 rounded-4">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="is_public" id="isPublic" checked>
+                            <label class="form-check-label fw-bold" for="isPublic">
+                                <i class="bi bi-eye me-1"></i> Visible to all members
+                            </label>
+                            <small class="d-block text-muted mt-1 ms-4">Group members can see and download this file</small>
+                        </div>
+                        <div class="form-check mt-3">
+                            <input class="form-check-input" type="checkbox" name="is_primary" id="isPrimary">
+                            <label class="form-check-label fw-bold" for="isPrimary">
+                                <i class="bi bi-star-fill me-1" style="color: #fbbf24;"></i> Mark as main bill
+                            </label>
+                            <small class="d-block text-muted mt-1 ms-4">This will be shown first in the bill list</small>
+                        </div>
+                    </div>
+
+                    <!-- Upload Button -->
+                    <button type="submit" class="btn w-100 py-3 rounded-pill fw-800 shadow-lg text-white" 
+                            style="background: #6366f1; border: none;">
+                        <i class="bi bi-cloud-upload me-2"></i> Upload Bill
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BILL VIEW MODAL -->
+<div class="modal fade" id="billViewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h4 class="fw-800" id="billViewTitle">Bill Details</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Bill Preview -->
+                <div id="billPreviewContainer" class="mb-4">
+                    <!-- Image preview or PDF placeholder -->
+                </div>
+
+                <!-- Bill Details -->
+                <div class="bg-light p-3 rounded-4 mb-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="small text-muted mb-1">File Name</p>
+                            <p class="fw-bold" id="billFileName">-</p>
+                        </div>
+                        <div class="col-6">
+                            <p class="small text-muted mb-1">File Type</p>
+                            <p class="fw-bold" id="billFileType">-</p>
+                        </div>
+                        <div class="col-6 mt-3">
+                            <p class="small text-muted mb-1">File Size</p>
+                            <p class="fw-bold" id="billFileSize">-</p>
+                        </div>
+                        <div class="col-6 mt-3">
+                            <p class="small text-muted mb-1">Uploaded By</p>
+                            <p class="fw-bold" id="billUploadedBy">-</p>
+                        </div>
+                        <div class="col-6 mt-3">
+                            <p class="small text-muted mb-1">Uploaded At</p>
+                            <p class="fw-bold" id="billUploadedAt">-</p>
+                        </div>
+                        <div class="col-6 mt-3">
+                            <p class="small text-muted mb-1">Downloads</p>
+                            <p class="fw-bold" id="billDownloadCount">-</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-top">
+                        <p class="small text-muted mb-1">Description</p>
+                        <p class="fw-bold" id="billDescription">No description</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex gap-2">
+                    <a href="#" id="billDownloadBtn" class="btn btn-success flex-grow-1 py-3 rounded-pill fw-800" 
+                       style="text-decoration: none;">
+                        <i class="bi bi-download me-2"></i> Download
+                    </a>
+                    <button type="button" class="btn btn-danger flex-grow-1 py-3 rounded-pill fw-800" 
+                            id="billDeleteBtn" style="display: none;">
+                        <i class="bi bi-trash me-2"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* File Upload Zone Styles */
+    .file-upload-zone {
+        position: relative;
+    }
+
+    .file-upload-zone.dragover {
+        background-color: #eef2ff !important;
+        border-color: #4f46e5 !important;
+    }
+
+    /* Bill Gallery Styles */
+    .bill-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .bill-item {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .bill-item:hover {
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #6366f1;
+    }
+
+    .bill-item.primary::before {
+        content: '★';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: #fbbf24;
+        font-size: 1.2rem;
+    }
+
+    .bill-thumbnail {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.7rem;
+        color: #64748b;
+    }
+
+    .bill-thumbnail.image {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+    }
+
+    .bill-thumbnail.pdf {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        color: white;
+    }
+
+    /* Loading Spinner */
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.2em;
+    }
+</style>
+
+<script>
+// Bill Upload Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadZone = document.getElementById('fileUploadZone');
+    const billFileInput = document.getElementById('billFile');
+    const fileInfo = document.getElementById('fileInfo');
+    const billUploadForm = document.getElementById('billUploadForm');
+
+    // Click to upload
+    fileUploadZone.addEventListener('click', () => billFileInput.click());
+
+    // Drag and drop
+    fileUploadZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        fileUploadZone.classList.add('dragover');
+    });
+
+    fileUploadZone.addEventListener('dragleave', () => {
+        fileUploadZone.classList.remove('dragover');
+    });
+
+    fileUploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileUploadZone.classList.remove('dragover');
+        billFileInput.files = e.dataTransfer.files;
+        updateFileInfo();
+    });
+
+    // File selection
+    billFileInput.addEventListener('change', updateFileInfo);
+
+    function updateFileInfo() {
+        const file = billFileInput.files[0];
+        if (file) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.textContent = `✓ ${file.name} (${sizeMB} MB)`;
+            fileInfo.style.display = 'block';
+        }
+    }
+
+    // Form submission
+    billUploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const expenseId = document.getElementById('expenseIdForBill').value;
+        if (!expenseId) {
+            alert('Please select an expense first');
+            return;
+        }
+
+        const formData = new FormData(billUploadForm);
+        const submitBtn = billUploadForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        try {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+            
+            const response = await fetch(`/expense/${expenseId}/upload-bill/`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                showNotification('Bill uploaded successfully!', 'success');
+                billUploadForm.reset();
+                fileInfo.style.display = 'none';
+                document.getElementById('billUploadModal').querySelector('.btn-close').click();
+                // Refresh bills for this expense
+                loadExpenseBills(expenseId);
+            } else {
+                showNotification('Error uploading bill. Please try again.', 'danger');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            showNotification('Error uploading bill: ' + error.message, 'danger');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        }
+    });
+});
+
+// Load bills for expense
+async function loadExpenseBills(expenseId) {
+    try {
+        const response = await fetch(`/api/expense/${expenseId}/bills/`);
+        const data = await response.json();
+        displayBills(data.bills, expenseId);
+    } catch (error) {
+        console.error('Error loading bills:', error);
+    }
+}
+
+// Display bills in UI
+function displayBills(bills, expenseId) {
+    const billsContainer = document.getElementById(`bills-${expenseId}`);
+    if (!billsContainer) return;
+
+    if (bills.length === 0) {
+        billsContainer.innerHTML = '<p class="text-muted small text-center mb-0">No bills uploaded yet</p>';
+        return;
+    }
+
+    let billsHTML = '<div class="mb-2">';
+    bills.forEach(bill => {
+        const typeIcon = bill.file_type === 'Bill/Receipt' ? '📄' : 
+                        bill.file_type === 'Invoice' ? '📋' : 
+                        bill.file_type === 'Receipt' ? '✓' : '📎';
+        
+        billsHTML += `
+            <div class="bill-item ${bill.is_primary ? 'primary' : ''}" onclick="viewBillDetails(${bill.id})">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bill-thumbnail ${bill.is_image ? 'image' : bill.is_pdf ? 'pdf' : ''}">
+                        ${typeIcon}
+                    </div>
+                    <div class="flex-grow-1" style="min-width: 0;">
+                        <div class="fw-bold text-truncate" style="font-size: 0.9rem;">${bill.file_name}</div>
+                        <small class="text-muted">${bill.file_size} • By ${bill.uploaded_by}</small>
+                    </div>
+                    ${bill.is_primary ? '<span class="badge bg-warning text-dark">Primary</span>' : ''}
+                </div>
+            </div>
+        `;
+    });
+    billsHTML += '</div>';
+    billsContainer.innerHTML = billsHTML;
+}
+
+// View bill details
+async function viewBillDetails(billId) {
+    try {
+        const response = await fetch(`/api/bill/${billId}/details/`);
+        const bill = await response.json();
+        
+        document.getElementById('billViewTitle').textContent = bill.file_name;
+        document.getElementById('billFileName').textContent = bill.file_name;
+        document.getElementById('billFileType').textContent = bill.file_type;
+        document.getElementById('billFileSize').textContent = bill.file_size;
+        document.getElementById('billUploadedBy').textContent = bill.uploaded_by;
+        document.getElementById('billUploadedAt').textContent = bill.uploaded_at;
+        document.getElementById('billDownloadCount').textContent = bill.download_count + ' downloads';
+        document.getElementById('billDescription').textContent = bill.description;
+        
+        // Preview
+        let preview = '';
+        if (bill.is_image) {
+            preview = `<img src="${bill.file_url}" class="img-fluid rounded-3 border" style="max-height: 300px; object-fit: cover; width: 100%;">`;
+        } else if (bill.is_pdf) {
+            preview = `<div class="bg-dark text-white rounded-3 p-5 text-center" style="min-height: 300px;"><i class="bi bi-file-pdf display-1 mb-3"></i><p class="fw-bold">PDF File</p></div>`;
+        } else {
+            preview = `<div class="bg-light rounded-3 p-5 text-center" style="min-height: 300px;"><i class="bi bi-file-earmark display-1 text-muted mb-3"></i><p class="fw-bold text-muted">${bill.file_type}</p></div>`;
+        }
+        document.getElementById('billPreviewContainer').innerHTML = preview;
+        
+        // Download button
+        const downloadBtn = document.getElementById('billDownloadBtn');
+        downloadBtn.href = `/bill/${billId}/download/`;
+        
+        // Delete button (only if can delete)
+        const deleteBtn = document.getElementById('billDeleteBtn');
+        if (bill.can_delete) {
+            deleteBtn.style.display = 'block';
+            deleteBtn.onclick = () => deleteBill(billId);
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+        
+        new bootstrap.Modal(document.getElementById('billViewModal')).show();
+    } catch (error) {
+        console.error('Error loading bill details:', error);
+    }
+}
+
+// Delete bill
+function deleteBill(billId) {
+    if (confirm('Are you sure you want to delete this bill? This action cannot be undone.')) {
+        fetch(`/bill/${billId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        }).then(response => {
+            if (response.ok) {
+                document.getElementById('billViewModal').querySelector('.btn-close').click();
+                showNotification('Bill deleted successfully!', 'success');
+                // Refresh page or reload bills
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    }
+}
+
+// Show notification
+function showNotification(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 4000);
+}
+
+// Open bill upload modal for specific expense
+function openBillUploadForExpense(expenseId) {
+    document.getElementById('expenseIdForBill').value = expenseId;
+    new bootstrap.Modal(document.getElementById('billUploadModal')).show();
+}
+</script>

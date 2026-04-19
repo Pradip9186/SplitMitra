@@ -31,7 +31,8 @@
             display: flex; justify-content: space-between; align-items: center;
         }
         .total-box { background: #6366f1; color: white; border-radius: 15px; padding: 15px; width: 48%; }
-        .member-box { background: #f8fafc; border: 1px solid #eee; border-radius: 15px; padding: 15px; width: 48%; }
+        .member-box { background: #f8fafc; border: 1px solid #eee; border-radius: 15px; padding: 15px; width: 48%; cursor: pointer; }
+        .member-box:hover { border-color: #6366f1; background: #eef2ff; }
 
         /* 3. TABS */
         .tab-nav { margin-top: 25px; gap: 10px; display: flex; overflow-x: auto; padding-bottom: 5px; }
@@ -72,6 +73,10 @@
             transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
         }
         .btn-qr-pay:hover { background: #6366f1; color: white; }
+        .member-chart-panel { transition: all 0.2s ease; }
+        .member-chart-entry { margin-bottom: 18px; }
+        .member-chart-bar { height: 12px; border-radius: 999px; background: #6366f1; }
+        .member-chart-label { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 0.92rem; }
         
         /* QR Modal Styling */
         #qrContainer { background: white; padding: 20px; border-radius: 16px; display: inline-block; border: 2px dashed #cbd5e1; }
@@ -89,10 +94,16 @@
                     <small class="opacity-75">Trip Expenses</small>
                 </div>
             </div>
-            <div class="d-flex gap-2">
-                <i class="bi bi-person-plus fs-4"></i>
-                <i class="bi bi-share fs-4"></i>
-                <i class="bi bi-gear fs-4"></i>
+            <div class="d-flex gap-2 align-items-center">
+                <button type="button" class="btn btn-light btn-sm shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#addMemberModal" title="Add Member">
+                    <i class="bi bi-person-plus-fill fs-5"></i>
+                </button>
+                <button type="button" class="btn btn-light btn-sm shadow-sm rounded-3" data-bs-toggle="modal" data-bs-target="#shareLinkModal" title="Share Group">
+                    <i class="bi bi-share-fill fs-5"></i>
+                </button>
+                <a href="{% url 'group_settings' group.id %}" class="btn btn-light btn-sm shadow-sm rounded-3" title="Group Settings">
+                    <i class="bi bi-gear-fill fs-5"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -104,21 +115,134 @@
                 <h4 class="mb-0 fw-800">₹ {{ total_group_expense|default:"0" }}</h4>
                 <small class="opacity-75">Total Expenses</small>
             </div>
-            <div class="member-box">
+            <div class="member-box" onclick="toggleMemberChart()" title="Click to view member chart">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     {% for member in group.members.all|slice:":3" %}
                     <img src="https://ui-avatars.com/api/?name={{ member.username }}&background=random" class="rounded-circle" width="20">
                     {% endfor %}
                 </div>
                 <small class="fw-bold text-muted">Total Members: {{ group.members.count }}</small>
+                <div class="text-muted small mt-2">Click to open member chart</div>
+            </div>
+        </div>
+
+        <div id="memberChartPanel" class="member-chart-panel mt-3 p-4 bg-white rounded-4 shadow-sm border d-none">
+            <h6 class="fw-bold mb-3">Member Contribution Chart</h6>
+            <p class="text-muted small mb-4">This chart shows each member's net balance for the group.</p>
+            {% for item in member_chart_data %}
+            <div class="member-chart-entry">
+                <div class="member-chart-label">
+                    <span class="fw-bold">{{ item.name }}</span>
+                    <span class="text-muted">₹ {{ item.net_balance|floatformat:2 }}</span>
+                </div>
+                <div class="bg-slate-100 rounded-full overflow-hidden" style="height: 12px; background: #e2e8f0;">
+                    <div class="member-chart-bar" style="width: {{ item.bar_percent }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 p-4 bg-white rounded-4 shadow-sm border">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="fw-bold mb-1">Members</h6>
+                    <small class="text-muted">Current group membership and invite options.</small>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                    <i class="bi bi-person-plus me-1"></i> Add Member
+                </button>
+            </div>
+            <div class="d-flex flex-wrap gap-3">
+                {% for member in group.members.all %}
+                <div class="p-3 rounded-4 border bg-light" style="min-width: 180px; flex: 1 1 180px;">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="https://ui-avatars.com/api/?name={{ member.first_name|default:member.username }}&background=random&color=fff" class="rounded-circle" width="36">
+                        <div>
+                            <div class="fw-bold mb-1">{% if member == request.user %}You{% else %}{{ member.first_name|default:member.username }}{% endif %}</div>
+                            <small class="text-muted">{{ member.email }}</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-white text-muted border rounded-pill px-2 py-1">
+                        {% if member == group.created_by %}Admin{% else %}Member{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
         <div class="tab-nav">
             <a href="{% url 'group_detail' group.id %}" class="tab-item">Expenses</a>
             <a href="#" class="tab-item active">Balances</a>
-            <a href="#" class="tab-item">Activity</a>
-            <a href="#" class="tab-item">Settings</a>
+            <a href="{% url 'group_activity_log' group.id %}" class="tab-item">Activity</a>
+        </div>
+
+        <div class="modal fade" id="addMemberModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <div>
+                            <h5 class="fw-bold mb-1">Add Member</h5>
+                            <small class="text-muted">Invite an existing user or add a new member by email.</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form method="POST" action="{% url 'add_member' group.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label small text-muted fw-bold">Name</label>
+                                <input type="text" name="name" class="form-control premium-input" placeholder="Enter name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-muted fw-bold">Email</label>
+                                <input type="email" name="email" class="form-control premium-input" placeholder="member@example.com" required>
+                            </div>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-bold">Phone</label>
+                                    <input type="tel" name="phone" class="form-control premium-input" placeholder="Optional">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-bold">UPI ID</label>
+                                    <input type="text" name="upi_id" class="form-control premium-input" placeholder="Optional">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-3">Add Member</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="shareLinkModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-md">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <div>
+                            <h5 class="fw-bold mb-1">Share Group</h5>
+                            <small class="text-muted">Create or copy a shareable invite link for this group.</small>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div id="shareLinkAlert" class="alert alert-info rounded-4" role="alert">
+                            Loading group share link...
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Invite Link</label>
+                            <div class="input-group">
+                                <input id="shareLinkInput" type="text" class="form-control premium-input" readonly placeholder="Invite link will appear here">
+                                <button type="button" class="btn btn-primary rounded-end-pill" id="copyShareLinkBtn">Copy</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted fw-bold">Max Uses</label>
+                            <input id="shareLinkMaxUses" type="number" min="0" class="form-control premium-input" placeholder="0 = Unlimited" value="0">
+                        </div>
+                        <button id="generateShareLinkBtn" type="button" class="btn btn-outline-primary w-100 rounded-pill py-3">Generate New Link</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mt-4 pb-5">
@@ -236,6 +360,101 @@
         var myModal = new bootstrap.Modal(document.getElementById('qrPaymentModal'));
         myModal.show();
     }
+
+    var groupId = {{ group.id }};
+
+    function toggleMemberChart() {
+        var panel = document.getElementById('memberChartPanel');
+        if (!panel) return;
+        panel.classList.toggle('d-none');
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setShareModalState(message, isError) {
+        var alert = document.getElementById('shareLinkAlert');
+        alert.textContent = message;
+        alert.className = 'alert rounded-4 ' + (isError ? 'alert-danger' : 'alert-info');
+    }
+
+    function updateShareLink(url) {
+        var input = document.getElementById('shareLinkInput');
+        input.value = url || '';
+        document.getElementById('copyShareLinkBtn').disabled = !url;
+        document.getElementById('generateShareLinkBtn').disabled = false;
+    }
+
+    function fetchInviteLink() {
+        setShareModalState('Loading group share link...', false);
+        fetch(`/group/${groupId}/invite-link/api/`)
+            .then(function(response) {
+                if (!response.ok) throw new Error('Unable to load invite link');
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.invite_url) {
+                    setShareModalState('Invite link ready. Copy it and share with your group.', false);
+                    updateShareLink(data.invite_url);
+                } else {
+                    setShareModalState('No active invite link found. Generate one below.', false);
+                    updateShareLink('');
+                }
+            })
+            .catch(function() {
+                setShareModalState('Could not load invite link. Refresh the page if needed.', true);
+                updateShareLink('');
+            });
+    }
+
+    function generateInviteLink() {
+        setShareModalState('Generating new invite link...', false);
+        var maxUses = document.getElementById('shareLinkMaxUses').value || 0;
+
+        var formData = new FormData();
+        formData.append('max_uses', maxUses);
+
+        fetch(`/group/${groupId}/invite-link/api/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(function(response) {
+                if (!response.ok) throw new Error('Unable to generate invite link');
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.invite_url) {
+                    setShareModalState('Invite link generated successfully. Copy it to share with members.', false);
+                    updateShareLink(data.invite_url);
+                } else {
+                    setShareModalState('Could not create invite link.', true);
+                }
+            })
+            .catch(function() {
+                setShareModalState('Error generating invite link.', true);
+            });
+    }
+
+    document.getElementById('shareLinkModal').addEventListener('shown.bs.modal', function () {
+        fetchInviteLink();
+    });
+
+    document.getElementById('generateShareLinkBtn').addEventListener('click', function () {
+        generateInviteLink();
+    });
+
+    document.getElementById('copyShareLinkBtn').addEventListener('click', function () {
+        var input = document.getElementById('shareLinkInput');
+        if (!input.value) return;
+        input.select();
+        input.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(input.value).then(function() {
+            setShareModalState('Link copied to clipboard!', false);
+        }).catch(function() {
+            setShareModalState('Copy failed. Please copy manually.', true);
+        });
+    });
 </script>
 
 </body>

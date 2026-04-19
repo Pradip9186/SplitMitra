@@ -88,9 +88,9 @@
     <div class="nav-item"><a href="{% url 'dashboard' %}"><i class="bi bi-grid-1x2-fill fs-5"></i> Dashboard</a></div>
     <div class="nav-item"><a href="{% url 'my_groups' %}" class="active"><i class="bi bi-people-fill fs-5"></i> My Groups</a></div>
     <div class="nav-item"><a href="{% url 'analytics' %}"><i class="bi bi-bar-chart-fill fs-5"></i> Analytics</a></div>
-    <div class="nav-item"><a href="#"><i class="bi bi-person-heart fs-5"></i> Friends</a></div>
-    <div class="nav-item"><a href="#"><i class="bi bi-activity"></i> Activity</a></div>
-    <div class="nav-item mt-auto"><a href="#"><i class="bi bi-gear-fill fs-5"></i> Settings</a></div>
+    <div class="nav-item"><a href="{% url 'friends' %}"><i class="bi bi-person-heart fs-5"></i> Friends</a></div>
+    <div class="nav-item"><a href="{% url 'activity' %}"><i class="bi bi-activity"></i> Activity</a></div>
+    <div class="nav-item mt-auto"><a href="{% url 'settings' %}"><i class="bi bi-gear-fill fs-5"></i> Settings</a></div>
     <div class="nav-item mt-2"><a href="{% url 'logout' %}" class="text-danger"><i class="bi bi-box-arrow-right fs-5"></i> Logout</a></div>
 </aside>
 
@@ -108,7 +108,7 @@
     <div class="row g-4">
         {% for group in groups %}
         <div class="col-md-4">
-            <a href="{% url 'group_detail' group.id %}" class="p-group-card shadow-sm">
+            <div class="p-group-card shadow-sm" style="text-decoration: none;">
                 
                 <div class="d-flex justify-content-between align-items-start mb-4">
                     <div class="cat-icon-pro shadow-sm">
@@ -121,13 +121,30 @@
                         {% elif group.category == 'sports' %}⚽
                         {% else %}🎟️{% endif %}
                     </div>
-                    <span class="badge rounded-pill bg-light text-dark border px-3 py-2 fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 1px;">
-                        {{ group.category }}
-                    </span>
+                    <div class="dropdown">
+                        <button class="btn btn-sm" data-bs-toggle="dropdown" style="background: #f1f5f9; border: none; border-radius: 10px; padding: 8px 12px;">
+                            <i class="bi bi-three-dots-vertical text-dark"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="border-radius: 16px;">
+                            <li><a class="dropdown-item fw-600" href="{% url 'group_detail' group.id %}"><i class="bi bi-eye me-2"></i> View</a></li>
+                            {% if user == group.created_by %}
+                            <li><a class="dropdown-item fw-600" href="{% url 'edit_group' group.id %}"><i class="bi bi-pencil me-2"></i> Edit</a></li>
+                            <li><a class="dropdown-item fw-600" href="{% url 'generate_invite_link' group.id %}"><i class="bi bi-link-45deg me-2"></i> Invite Link</a></li>
+                            <li><a class="dropdown-item fw-600" href="{% url 'transfer_ownership' group.id %}"><i class="bi bi-arrow-left-right me-2"></i> Transfer</a></li>
+                            <li><a class="dropdown-item fw-600" href="{% url 'group_activity_log' group.id %}"><i class="bi bi-clock-history me-2"></i> Activity</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item fw-600 text-danger" href="{% url 'delete_group' group.id %}"><i class="bi bi-archive me-2"></i> Archive</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item fw-600" href="{% url 'group_activity_log' group.id %}"><i class="bi bi-clock-history me-2"></i> Activity</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
                 </div>
                 
-                <h4 class="fw-800 text-dark mb-1">{{ group.name }}</h4>
-                <p class="small text-muted fw-bold mb-4">Created on {{ group.created_at|date:"d M, Y" }}</p>
+                <a href="{% url 'group_detail' group.id %}" style="text-decoration: none; color: inherit;">
+                    <h4 class="fw-800 text-dark mb-1">{{ group.name }}</h4>
+                    <p class="small text-muted fw-bold mb-4">Created on {{ group.created_at|date:"d M, Y" }}</p>
+                </a>
                 
                 <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
                     <div class="avatar-stack-pro d-flex align-items-center">
@@ -145,7 +162,7 @@
                         <span class="fw-800 text-dark">{{ group.members.count }} Total</span>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">

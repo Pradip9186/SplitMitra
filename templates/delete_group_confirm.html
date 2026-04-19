@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Group - SplitMitra Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .premium-card {
+            background: white;
+            border-radius: 32px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        .warning-icon {
+            font-size: 80px;
+            color: #e63946;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .premium-btn {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 40px;
+            font-weight: 700;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .btn-delete {
+            background: #e63946;
+            color: white;
+            margin-top: 20px;
+        }
+        .btn-delete:hover {
+            background: #d62828;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4);
+        }
+        .btn-cancel {
+            background: #e2e8f0;
+            color: #1e1e2f;
+            margin-top: 10px;
+        }
+        .btn-cancel:hover {
+            background: #cbd5e1;
+            color: #1e1e2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="premium-card">
+        <div class="warning-icon">⚠️</div>
+        <h2 class="mb-2 fw-800" style="letter-spacing: -0.5px; color: #1e1e2f;">Archive Group?</h2>
+        <p class="text-muted mb-4">
+            You're about to archive <strong>"{{ group.name }}"</strong>. This group will be hidden from your active groups list, but all data will be preserved and you can restore it anytime.
+        </p>
+
+        <form method="POST" class="mt-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            
+            <button type="submit" class="premium-btn btn-delete">
+                <i class="bi bi-archive me-2"></i> Yes, Archive This Group
+            </button>
+            <a href="{% url 'group_detail' group.id %}" class="premium-btn btn-cancel text-decoration-none">
+                <i class="bi bi-x-circle me-2"></i> Cancel
+            </a>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

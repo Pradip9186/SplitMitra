@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -75,10 +76,13 @@ WSGI_APPLICATION = 'splitmitra.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Use the project SQLite database by default, matching the existing db.sqlite3 file.
+# Override with DJANGO_DB_NAME if a custom database path is needed.
+custom_db_name = os.environ.get('DJANGO_DB_NAME')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': Path(custom_db_name) if custom_db_name else BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -123,6 +127,18 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+# --- MEDIA FILES (User Uploads - Bills, Receipts, etc.) ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# File Upload Settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+
+# Allowed file extensions for bill uploads
+ALLOWED_BILL_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'doc', 'docx', 'xls', 'xlsx']
+MAX_BILL_FILE_SIZE = 10485760  # 10 MB in bytes
 
 # --- EMAIL SETTINGS ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
