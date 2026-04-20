@@ -129,11 +129,9 @@
                             <li><a class="dropdown-item fw-600" href="{% url 'group_detail' group.id %}"><i class="bi bi-eye me-2"></i> View</a></li>
                             {% if user == group.created_by %}
                             <li><a class="dropdown-item fw-600" href="{% url 'edit_group' group.id %}"><i class="bi bi-pencil me-2"></i> Edit</a></li>
-                            <li><a class="dropdown-item fw-600" href="{% url 'generate_invite_link' group.id %}"><i class="bi bi-link-45deg me-2"></i> Invite Link</a></li>
-                            <li><a class="dropdown-item fw-600" href="{% url 'transfer_ownership' group.id %}"><i class="bi bi-arrow-left-right me-2"></i> Transfer</a></li>
                             <li><a class="dropdown-item fw-600" href="{% url 'group_activity_log' group.id %}"><i class="bi bi-clock-history me-2"></i> Activity</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item fw-600 text-danger" href="{% url 'delete_group' group.id %}"><i class="bi bi-archive me-2"></i> Archive</a></li>
+                            <li><a class="dropdown-item fw-600 text-danger" href="{% url 'delete_group' group.id %}"><i class="bi bi-trash me-2"></i> Delete Group</a></li>
                             {% else %}
                             <li><a class="dropdown-item fw-600" href="{% url 'group_activity_log' group.id %}"><i class="bi bi-clock-history me-2"></i> Activity</a></li>
                             {% endif %}

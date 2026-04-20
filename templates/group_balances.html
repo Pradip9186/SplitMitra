@@ -270,13 +270,6 @@
 
                 {% if debt.from_user == request.user %}
                 <div class="row g-2 mt-2">
-                    <div class="col-12">
-                        <form action="{% url 'settle_up' group.id debt.to_user.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="amount" value="{{ debt.amount }}">
-                            <button type="submit" class="btn-settle-up"><i class="bi bi-check-circle-fill me-1"></i> I Have Paid Outside</button>
-                        </form>
-                    </div>
                     {% if debt.to_user.profile.upi_id %}
                     <div class="col-12">
                         <button class="btn-qr-pay" onclick="showQRModal('{{ debt.to_user.username }}', '{{ debt.to_user.profile.upi_id }}', '{{ debt.amount|floatformat:2 }}')">

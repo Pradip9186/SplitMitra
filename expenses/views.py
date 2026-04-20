@@ -10,13 +10,18 @@ from datetime import timedelta, datetime
 import string
 import random
 
-# ✅ NAYE IMPORTS FOR QR CODE & INLINE EMAIL
+# ✅ NAYE IMPORTS FOR QR CODE, PDF EXPORT, & INLINE EMAIL
 import qrcode
 import io
 import base64
 from django.core.mail import EmailMultiAlternatives, send_mail
 from email.mime.image import MIMEImage
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch
 import json
 
 # --- 1. LOGIN VIEW ---
@@ -430,7 +435,7 @@ def logout_view(request):
 def my_groups(request):
     if not request.user.is_authenticated:
         return redirect('login')
-    user_groups = Group.objects.filter(members=request.user).order_by('-created_at')
+    user_groups = Group.objects.filter(members=request.user, is_archived=False).order_by('-created_at')
     return render(request, 'my_groups.html', {'groups': user_groups})
 
 # --- 10. ANALYTICS VIEW ---
@@ -463,15 +468,181 @@ def analytics_view(request):
         category_data.append(float(amount))
 
     total_spent = sum(category_data)
+    total_expenses_count = expenses.count()
+    active_groups = Group.objects.filter(members=request.user, is_archived=False).count()
+    days_period = 1
+    if time_filter == 'week':
+        days_period = 7
+    elif time_filter == 'month':
+        days_period = 30
+    elif time_filter == 'year':
+        days_period = 365
+    else:
+        earliest = expenses.order_by('date').first()
+        days_period = max((timezone.now().date() - earliest.date).days + 1, 1) if earliest else 1
+
+    average_per_day = round(total_spent / days_period, 2) if days_period else 0.0
+    top_category_label = 'No spending yet'
+    if category_data and max(category_data) > 0:
+        top_category_index = category_data.index(max(category_data))
+        top_category_label = category_labels[top_category_index]
 
     context = {
         'category_labels': category_labels,
         'category_data': category_data,
         'total_spent': total_spent,
         'current_filter': time_filter,
-        'filter_label': filter_label
+        'filter_label': filter_label,
+        'average_per_day': average_per_day,
+        'active_groups': active_groups,
+        'top_category_label': top_category_label,
+        'total_expenses_count': total_expenses_count,
     }
     return render(request, 'analytics.html', context)
+
+# --- 11. ANALYTICS DOWNLOAD PDF ---
+def analytics_download_pdf(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    time_filter = request.GET.get('filter', 'month')
+    now = timezone.now().date()
+    expenses = Expense.objects.filter(paid_by=request.user, is_settlement=False)
+
+    if time_filter == 'week':
+        expenses = expenses.filter(date__gte=now - timedelta(days=7))
+        filter_label = 'This Week'
+    elif time_filter == 'month':
+        expenses = expenses.filter(date__gte=now - timedelta(days=30))
+        filter_label = 'This Month'
+    elif time_filter == 'year':
+        expenses = expenses.filter(date__gte=now - timedelta(days=365))
+        filter_label = 'This Year'
+    else:
+        filter_label = 'All Time'
+
+    categories = ['home', 'trip', 'couple', 'personal', 'business', 'office', 'sports', 'others']
+    category_labels = ['Home', 'Trip', 'Couple', 'Personal', 'Business', 'Office', 'Sports', 'Others']
+    category_data = []
+
+    for cat in categories:
+        amount = expenses.filter(group__category=cat).aggregate(Sum('amount'))['amount__sum'] or 0
+        category_data.append(float(amount))
+
+    active_groups = Group.objects.filter(members=request.user, is_archived=False).count()
+    top_category_label = 'No spending yet'
+    if category_data and max(category_data) > 0:
+        top_category_index = category_data.index(max(category_data))
+        top_category_label = category_labels[top_category_index]
+
+    group_totals = []
+    for group in Group.objects.filter(members=request.user, is_archived=False):
+        group_amount = expenses.filter(group=group).aggregate(Sum('amount'))['amount__sum'] or 0
+        if group_amount > 0:
+            group_totals.append((group.name, float(group_amount)))
+
+    total_spent = sum(category_data)
+    total_expenses_count = expenses.count()
+    recent_expenses = expenses.select_related('group').order_by('-date')[:50]
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'titleStyle', parent=styles['Heading1'], fontSize=20, leading=24, spaceAfter=14
+    )
+    header_style = ParagraphStyle(
+        'headerStyle', parent=styles['Heading2'], fontSize=14, leading=18, spaceAfter=10
+    )
+    normal_style = ParagraphStyle('normalStyle', parent=styles['Normal'], fontSize=10, leading=14)
+
+    elements = []
+    elements.append(Paragraph('SplitMitra Financial Report', title_style))
+    elements.append(Paragraph(f'Report generated for: {request.user.first_name or request.user.username}', normal_style))
+    elements.append(Paragraph(f'Period: {filter_label}', normal_style))
+    elements.append(Paragraph(f'Date: {timezone.now().strftime("%Y-%m-%d %H:%M")}', normal_style))
+    elements.append(Spacer(1, 16))
+
+    summary_data = [
+        ['Metric', 'Value'],
+        ['Total Spent', f'₹ {total_spent:.2f}'],
+        ['Expenses Count', str(total_expenses_count)],
+        ['Active Groups', str(Group.objects.filter(members=request.user, is_archived=False).count())],
+        ['Top Category', top_category_label if total_spent > 0 else 'N/A'],
+    ]
+    summary_table = Table(summary_data, colWidths=[3*inch, 3*inch], hAlign='LEFT')
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+    ]))
+    elements.append(summary_table)
+    elements.append(Spacer(1, 20))
+
+    elements.append(Paragraph('Category Breakdown', header_style))
+    category_table_data = [['Category', 'Amount (₹)']]
+    for label, amount in zip(category_labels, category_data):
+        category_table_data.append([label, f'{amount:.2f}'])
+    category_table = Table(category_table_data, colWidths=[3*inch, 3*inch], hAlign='LEFT')
+    category_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0f172a')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+    ]))
+    elements.append(category_table)
+    elements.append(Spacer(1, 20))
+
+    if group_totals:
+        elements.append(Paragraph('Spending by Group', header_style))
+        group_table_data = [['Group', 'Amount (₹)']]
+        for name, amount in group_totals:
+            group_table_data.append([name, f'{amount:.2f}'])
+        group_table = Table(group_table_data, colWidths=[3*inch, 3*inch], hAlign='LEFT')
+        group_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(group_table)
+        elements.append(Spacer(1, 20))
+
+    if recent_expenses.exists():
+        elements.append(Paragraph('Recent Expense Details', header_style))
+        expenses_table_data = [['Date', 'Group', 'Category', 'Description', 'Amount (₹)']]
+        for expense in recent_expenses:
+            expenses_table_data.append([
+                expense.date.strftime('%Y-%m-%d'),
+                expense.group.name,
+                expense.group.get_category_display(),
+                expense.description,
+                f'{float(expense.amount):.2f}'
+            ])
+        expenses_table = Table(expenses_table_data, colWidths=[1*inch, 1.5*inch, 1*inch, 2*inch, 1*inch], repeatRows=1)
+        expenses_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4f46e5')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.4, colors.grey),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
+        ]))
+        elements.append(expenses_table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="SplitMitra_Report_{time_filter}_{timezone.now().strftime("%Y%m%d")}.pdf"'
+    return response
 
 # --- 11. GROUP BALANCES LOGIC ---
 def group_balances(request, group_id):
@@ -807,47 +978,22 @@ def activity_view(request):
 
 # --- 18. DELETE/ARCHIVE GROUP (Admin Only) ---
 def delete_group(request, group_id):
-    """Delete or archive a group (admin only)"""
+    """Permanently delete a group (admin only)"""
     if not request.user.is_authenticated:
         return redirect('login')
     
     group = get_object_or_404(Group, id=group_id)
     
-    # Check if user is admin (created the group or has admin role)
     if group.created_by != request.user:
         messages.error(request, "Only group admins can delete groups!")
         return redirect('my_groups')
     
     if request.method == 'POST':
-        action = request.POST.get('action', 'archive')
-        
+        action = request.POST.get('action', 'delete')
         if action == 'delete':
-            # Soft delete - archive the group
-            group.is_archived = True
-            group.save()
-            
-            # Log activity
-            GroupActivity.objects.create(
-                group=group,
-                action_by=request.user,
-                action_type='group_edited',
-                description=f"Archived group: {group.name}"
-            )
-            messages.success(request, f"Group '{group.name}' has been archived successfully!")
-        
-        elif action == 'restore':
-            # Restore archived group
-            group.is_archived = False
-            group.save()
-            
-            GroupActivity.objects.create(
-                group=group,
-                action_by=request.user,
-                action_type='group_edited',
-                description=f"Restored group: {group.name}"
-            )
-            messages.success(request, f"Group '{group.name}' has been restored!")
-        
+            group_name = group.name
+            group.delete()
+            messages.success(request, f"Group '{group_name}' has been deleted permanently.")
         return redirect('my_groups')
     
     return render(request, 'delete_group_confirm.html', {'group': group})
@@ -1590,3 +1736,48 @@ def get_expense_bills(request, expense_id):
         'total_bills': bills.count(),
         'bills': bills_data,
     })
+
+
+# --- 30. DELETE EXPENSE ---
+def delete_expense(request, expense_id):
+    """Delete an expense (admin or payer only)"""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    expense = get_object_or_404(Expense, id=expense_id)
+    group = expense.group
+    
+    # Permission checks: Only admin or the person who paid can delete
+    is_admin = group.created_by == request.user
+    is_payer = expense.paid_by == request.user
+    
+    if not (is_admin or is_payer):
+        messages.error(request, "You don't have permission to delete this expense.")
+        return redirect('group_detail', group_id=group.id)
+    
+    # Check if expense is already deleted
+    if expense.is_deleted:
+        messages.warning(request, "This expense has already been deleted.")
+        return redirect('group_detail', group_id=group.id)
+    
+    if request.method == 'POST':
+        # Soft delete the expense
+        expense.is_deleted = True
+        expense.save()
+        
+        # Log activity
+        paid_by_name = expense.paid_by.first_name or expense.paid_by.username
+        GroupActivity.objects.create(
+            group=group,
+            action_by=request.user,
+            action_type='expense_deleted',
+            description=f"Deleted expense: '{expense.description}' (₹{expense.amount}) paid by {paid_by_name}",
+            related_user=expense.paid_by
+        )
+        
+        messages.success(request, "Expense deleted successfully!")
+        return redirect('group_detail', group_id=group.id)
+    
+    # For GET requests, show confirmation
+    return render(request, 'confirm_delete_expense.html', {'expense': expense, 'group': group})
+

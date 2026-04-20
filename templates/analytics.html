@@ -196,9 +196,35 @@
                 <h1 class="display-3 fw-800 mb-4" style="letter-spacing: -2px;">₹ {{ total_spent|floatformat:1 }}</h1>
                 <p class="opacity-50 small mb-5 lh-lg">Aapne <strong>{{ filter_label|lower }}</strong> total itna amount pay kiya hai. Is data ko use karke aap apne budget ko better control kar sakte hain.</p>
                 
-                <button class="btn btn-download rounded-pill py-3 px-4 shadow-sm w-100">
+                <a href="{% url 'analytics_download_pdf' %}?filter={{ current_filter }}" class="btn btn-download rounded-pill py-3 px-4 shadow-sm w-100 text-decoration-none d-inline-flex align-items-center justify-content-center">
                     <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download Full Report
-                </button>
+                </a>
+                <div class="row g-3 mt-4 text-white">
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3">
+                            <p class="small text-white-50 mb-1">Average per Day</p>
+                            <h4 class="fw-bold">₹ {{ average_per_day|floatformat:1 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3">
+                            <p class="small text-white-50 mb-1">Active Groups</p>
+                            <h4 class="fw-bold">{{ active_groups }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3">
+                            <p class="small text-white-50 mb-1">Top Category</p>
+                            <h5 class="fw-bold">{{ top_category_label }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="bg-white bg-opacity-10 rounded-4 p-3">
+                            <p class="small text-white-50 mb-1">Expenses Count</p>
+                            <h4 class="fw-bold">{{ total_expenses_count }}</h4>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

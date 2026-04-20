@@ -244,12 +244,23 @@
                     </div>
                     <div class="text-end d-flex flex-column align-items-end gap-2">
                         <h5 class="fw-800 mb-0">₹ {{ expense.amount }}</h5>
-                        <!-- Bill Upload Button -->
-                        <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" 
-                                onclick="openBillUploadForExpense({{ expense.id }})" 
-                                style="font-size: 0.75rem; padding: 4px 12px;">
-                            <i class="bi bi-paperclip me-1"></i> Bill
-                        </button>
+                        <div class="d-flex gap-1">
+                            <!-- Bill Upload Button -->
+                            <button class="btn btn-sm btn-outline-primary rounded-pill fw-bold" 
+                                    onclick="openBillUploadForExpense({{ expense.id }})" 
+                                    style="font-size: 0.75rem; padding: 4px 12px;">
+                                <i class="bi bi-paperclip me-1"></i> Bill
+                            </button>
+                            <!-- Delete Button (only for admin or payer) -->
+                            {% if request.user == expense.paid_by or request.user == group.created_by %}
+                            <button class="btn btn-sm btn-outline-danger rounded-pill fw-bold" 
+                                    onclick="confirmDeleteExpense({{ expense.id }})" 
+                                    style="font-size: 0.75rem; padding: 4px 12px;" 
+                                    title="Delete expense">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 
@@ -485,6 +496,13 @@
                 console.error('Error:', error);
                 alert('Error removing member. Please try again.');
             });
+        }
+    }
+
+    // Delete expense function
+    function confirmDeleteExpense(expenseId) {
+        if (confirm('Are you sure you want to delete this expense? This action cannot be undone.')) {
+            window.location.href = `/expense/${expenseId}/delete/`;
         }
     }
 </script>

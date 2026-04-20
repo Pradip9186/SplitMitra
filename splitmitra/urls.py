@@ -14,10 +14,12 @@ from expenses.views import (
     logout_view, 
     create_group, 
     add_expense,
+    delete_expense,
     group_detail,
     add_member,
     my_groups,
     analytics_view,
+    analytics_download_pdf,
     profile_view,
     group_balances,  
     settle_up,       
@@ -63,6 +65,7 @@ urlpatterns = [
     path('dashboard/', dashboard, name='dashboard'),  
     path('my-groups/', my_groups, name='my_groups'), 
     path('analytics/', analytics_view, name='analytics'),
+    path('analytics/download-report/', analytics_download_pdf, name='analytics_download_pdf'),
     path('profile/', profile_view, name='profile'),
     path('settings/', settings_view, name='settings'),
     path('activity/', activity_view, name='activity'),
@@ -81,6 +84,7 @@ urlpatterns = [
     # --- Group & Expense Management ---
     path('create-group/', create_group, name='create_group'), 
     path('add-expense/', add_expense, name='add_expense'),   
+    path('expense/<int:expense_id>/delete/', delete_expense, name='delete_expense'),
     path('group/<int:group_id>/add-member/', add_member, name='add_member'),
     
     # ✅ ADVANCED GROUP MANAGEMENT URLS

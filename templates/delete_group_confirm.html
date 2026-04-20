@@ -69,9 +69,9 @@
 <body>
     <div class="premium-card">
         <div class="warning-icon">⚠️</div>
-        <h2 class="mb-2 fw-800" style="letter-spacing: -0.5px; color: #1e1e2f;">Archive Group?</h2>
+        <h2 class="mb-2 fw-800" style="letter-spacing: -0.5px; color: #1e1e2f;">Delete Group Permanently</h2>
         <p class="text-muted mb-4">
-            You're about to archive <strong>"{{ group.name }}"</strong>. This group will be hidden from your active groups list, but all data will be preserved and you can restore it anytime.
+            You are about to permanently delete <strong>"{{ group.name }}"</strong>. This action cannot be undone and all group expenses, members, bills, and activity history will be removed.
         </p>
 
         <form method="POST" class="mt-4">
@@ -79,7 +79,7 @@
             <input type="hidden" name="action" value="delete">
             
             <button type="submit" class="premium-btn btn-delete">
-                <i class="bi bi-archive me-2"></i> Yes, Archive This Group
+                <i class="bi bi-trash me-2"></i> Yes, Delete Permanently
             </button>
             <a href="{% url 'group_detail' group.id %}" class="premium-btn btn-cancel text-decoration-none">
                 <i class="bi bi-x-circle me-2"></i> Cancel
